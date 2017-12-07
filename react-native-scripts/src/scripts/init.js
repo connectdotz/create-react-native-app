@@ -21,14 +21,20 @@ const DEFAULT_DEV_DEPENDENCIES = {
   'react-test-renderer': '16.0.0',
 };
 
-module.exports = async (appPath: string, appName: string, verbose: boolean, cwd: string = '') => {
+module.exports = async (
+  appPath: string,
+  appName: string,
+  verbose: boolean,
+  cwd: string = '',
+  useYarn: ?boolean
+) => {
   const ownPackageName: string = require('../../package.json').name;
   const ownPath: string = path.join(appPath, 'node_modules', ownPackageName);
-  const useYarn: boolean = await pathExists(path.join(appPath, 'yarn.lock'));
-  const npmOrYarn = useYarn ? 'yarn' : 'npm';
+  const _useYarn: boolean = useYarn || (await pathExists(path.join(appPath, 'yarn.lock')));
+  const npmOrYarn = _useYarn ? 'yarn' : 'npm';
 
   // FIXME(perry) remove when npm 5 is supported
-  if (!useYarn) {
+  if (!_useYarn) {
     let npmVersion = spawn.sync('npm', ['--version']).stdout.toString().trim();
 
     if (npmVersion.match(/\d+/)[0] === '5') {

@@ -57,16 +57,25 @@ function userHasYarn() {
 // This decides the 'interface' of the package managing command.
 // Ex: If it guesses the type of package manager as 'yarn',
 //     then it executes '(yarn) add' command instead of '(npm) install'.
+
+// store result for optimization
+let _pmType: ?string;
+
 function packageManagerType() {
   const defaultType = 'npm';
   const supportedTypes = ['yarn', 'npm', 'pnpm'];
 
-  if (packageManager) {
-    let index = supportedTypes.indexOf(packageManager);
-    return index === -1 ? defaultType : supportedTypes[index];
+  if (_pmType) {
+    return _pmType;
   }
 
-  return userHasYarn() ? 'yarn' : defaultType;
+  if (packageManager) {
+    let index = supportedTypes.indexOf(packageManager);
+    _pmType = index === -1 ? defaultType : supportedTypes[index];
+  } else {
+    _pmType = userHasYarn() ? 'yarn' : defaultType;
+  }
+  return _pmType;
 }
 
 function packageManagerCmd() {
@@ -177,7 +186,7 @@ async function run(
 
     // $FlowFixMe (dikaiosune) maybe there's a way to convince flow this is legit?
     const init = require(scriptsPath);
-    await init(root, appName, verbose, cwd);
+    await init(root, appName, verbose, cwd, packageManagerType() === 'yarn');
   });
 }
 
